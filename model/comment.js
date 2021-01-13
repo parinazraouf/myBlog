@@ -1,6 +1,7 @@
 const db = require('~/lib/db');
 
 const MODEL_NAME = 'comments';
+const paginator = require('~/lib/paginator');
 
 /**
   * Create new comment
@@ -67,12 +68,13 @@ exports.getCommentByKey = async (key, fields) => {
   * Get all comments by post id
   * @param {Object} postId
   * @param {Array}  fields Comment fields
-  * @returns {Promise<Object>}
+  * @param {number} pageNumber
+  * @param {Object} options
+  * @returns {Promise<Array>}
 */
-exports.getAllCommentsByPostId = async (postId, fields) => {
-  const collection = await db.collection(MODEL_NAME);
-
-  return collection.find(postId)
-    .project(db.fieldProjector(fields))
-    .toArray();
+exports.getAllCommentsByPostId = async (postId, fields, pageNumber, { condition, sort } = {}) => {
+  return paginator(MODEL_NAME, fields, pageNumber, {
+    match: condition,
+    sort
+  });
 };

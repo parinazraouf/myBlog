@@ -1,6 +1,7 @@
 const db = require('~/lib/db');
 
 const MODEL_NAME = 'posts';
+const paginator = require('~/lib/paginator');
 
 /**
   * Create new post
@@ -39,7 +40,7 @@ exports.delete = async (condition) => {
   * Get post by id
   * @param {String} id Post id
   * @param {Array}  fields Post fields
-  * @returns {Promise<Object>}
+  * @returns {Promise<Array>}
 */
 exports.getPostById = async (id, fields) => {
   const collection = await db.collection(MODEL_NAME);
@@ -53,7 +54,7 @@ exports.getPostById = async (id, fields) => {
   * Get post by key
   * @param {Object} key
   * @param {Array}  fields Post fields
-  * @returns {Promise<Object>}
+  * @returns {Promise<Array>}
 */
 exports.getPostByKey = async (key, fields) => {
   const collection = await db.collection(MODEL_NAME);
@@ -67,39 +68,41 @@ exports.getPostByKey = async (key, fields) => {
   * Get all posts by author id
   * @param {Object} authorId
   * @param {Array}  fields Post fields
-  * @returns {Promise<Object>}
+  * @param {number} pageNumber
+  * @param {Object} options
+  * @returns {Promise<Array>}
 */
-exports.getAllPostsByAuthorId = async (authorId, fields) => {
-  const collection = await db.collection(MODEL_NAME);
-
-  return collection.find(authorId)
-    .project(db.fieldProjector(fields))
-    .toArray();
+exports.getAllPostsByAuthorId = async (authorId, fields, pageNumber, { condition, sort } = {}) => {
+  return paginator(MODEL_NAME, fields, pageNumber, {
+    match: condition,
+    sort
+  });
 };
 
 /**
   * Get all posts by category
   * @param {Object} category
   * @param {Array}  fields Post fields
-  * @returns {Promise<Object>}
+  * @param {number} pageNumber
+  * @param {Object} options
+  * @returns {Promise<Array>}
 */
-exports.getAllPostsByCategory = async (category, fields) => {
-  const collection = await db.collection(MODEL_NAME);
-
-  return collection.find(category)
-    .project(db.fieldProjector(fields))
-    .toArray();
+exports.getAllPostsByCategory = async (category, fields, pageNumber, { condition, sort } = {}) => {
+  return paginator(MODEL_NAME, fields, pageNumber, {
+    match: condition,
+    sort
+  });
 };
 
 /**
   * Get all posts
   * @param {Array}  fields Post fields
-  * @returns {Promise<Object>}
+  * @param {number} pageNumber
+  * @param {Object} options
+  * @returns {Promise<Array>}
 */
-exports.getAllPosts = async (fields) => {
-  const collection = await db.collection(MODEL_NAME);
-
-  return collection.find()
-    .project(db.fieldProjector(fields))
-    .toArray();
+exports.getAllPosts = async (fields, pageNumber, { sort } = {}) => {
+  return paginator(MODEL_NAME, fields, pageNumber, {
+    sort
+  });
 };

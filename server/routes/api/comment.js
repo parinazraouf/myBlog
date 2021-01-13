@@ -135,18 +135,22 @@ module.exports = router => {
   });
 
   const getAllPostCommentsSchema = Joi.object().keys({
-    id: Joi.string().required()
+    postId: Joi.string().required(),
+    pageNumber: Joi.number()
   });
 
-  router.get('/comment/all/:id', async ctx => {
-    const { id } = Joi.attempt({ id: ctx.params.id }, getAllPostCommentsSchema);
+  router.get('/comment/all/:postId', async ctx => {
+    const { postId, pageNumber } = Joi.attempt({ postId: ctx.params.postId, pageNumber: ctx.query.pageNumber }, getAllPostCommentsSchema);
 
-    const post = await postModel.getPostById(id, ['id']);
+    const post = await postModel.getPostById(postId, ['id']);
 
     // Check if post exists or doesn't
     httpInvariant(post, ...postError.postNotFound);
 
-    const res = await commentModel.getAllCommentsByPostId(id, properties.comment);
+    const res = await commentModel.getAllCommentsByPostId(postId, properties.comment, pageNumber, {
+      condition: { postId },
+      sort: { createdAt: -1 }
+    });
 
     ctx.body = res;
   });

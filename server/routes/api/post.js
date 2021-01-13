@@ -160,18 +160,22 @@ module.exports = router => {
   });
 
   const getAllPostsByAuthorIdSchema = Joi.object().keys({
-    authorId: Joi.string().required()
+    authorId: Joi.string().required(),
+    pageNumber: Joi.number()
   });
 
   router.get('/post/alluserposts/:authorId', async ctx => {
-    const { authorId } = Joi.attempt({ authorId: ctx.params.authorId }, getAllPostsByAuthorIdSchema);
+    const { authorId, pageNumber } = Joi.attempt({ authorId: ctx.params.authorId, pageNumber: ctx.query.pageNumber }, getAllPostsByAuthorIdSchema);
 
     // Check user existence
     const user = await userModel.getUserById(authorId, properties.user);
 
     httpInvariant(user, ...userError.userNotFound);
 
-    const res = await postModel.getAllPostsByAuthorId({ authorId }, properties.post);
+    const res = await postModel.getAllPostsByAuthorId(authorId, properties.post, pageNumber, {
+      condition: { authorId },
+      sort: { createdAt: -1 }
+    });
 
     ctx.body = res;
   });
@@ -181,19 +185,31 @@ module.exports = router => {
       .min(postLimit.categoryLengthRange[0])
       .max(postLimit.categoryLengthRange[1])
       .required()
-      .trim()
+      .trim(),
+    pageNumber: Joi.number()
   });
 
   router.get('/post/category/:category', async ctx => {
-    const { category } = Joi.attempt({ category: ctx.params.category }, getAllPostsByCategorySchema);
+    const { category, pageNumber } = Joi.attempt({ category: ctx.params.category, pageNumber: ctx.query.pageNumber }, getAllPostsByCategorySchema);
 
-    const post = await postModel.getAllPostsByCategory({ category }, properties.post);
+    const post = await postModel.getAllPostsByCategory({ category }, properties.post, pageNumber, {
+      condition: { category },
+      sort: { createdAt: -1 }
+    });
 
     ctx.body = post;
   });
 
+  const getAllPostsSchema = Joi.object().keys({
+    pageNumber: Joi.number()
+  });
+
   router.get('/post/all', async ctx => {
-    const post = await postModel.getAllPosts(properties.post);
+    const { pageNumber } = Joi.attempt({ pageNumber: ctx.query.pageNumber }, getAllPostsSchema);
+
+    const post = await postModel.getAllPosts(properties.post, pageNumber, {
+      sort: { createdAt: -1 }
+    });
 
     ctx.body = post;
   });
